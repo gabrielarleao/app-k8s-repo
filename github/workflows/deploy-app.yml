@@ -1,0 +1,25 @@
+name: Deploy Aplicação
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v3
+
+      - name: Login no Docker Registry
+        run: echo "${{ secrets.DOCKERHUB_PASSWORD }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
+
+      - name: Build e Push da Imagem Docker
+        run: |
+          docker build -t meu-registry/app:$GITHUB_SHA .
+          docker push meu-registry/app:$GITHUB_SHA
+
+      - name: Deploy no Kubernetes
+        run: |
+          kubectl set image deployment/minha-app minha-app=meu-registry/app:$GITHUB_SHA
